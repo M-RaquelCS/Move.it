@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useState } from 'react';
+import { createContext, ReactNode, useEffect, useState } from 'react';
 import challlenges from '../../challenges.json';
 
 interface Challenge{
@@ -16,6 +16,7 @@ interface ChallengesContextData{
     startNewChallenge: () => void;
     activeChallenge: Challenge;
     resetChallenge: () => void;
+    completedChallenge: () => void;
 }
 
 interface ChallengesProviderProps{
@@ -33,6 +34,10 @@ export function ChallengesProvider({children}: ChallengesProviderProps){
 
     const experienceToNextLevel = Math.pow((level + 1)*4,2)
 
+    useEffect(()=> {
+        Notification.requestPermission();
+    }, [])
+
     function levelUp(){
         setLevel(level + 1);
     }
@@ -41,14 +46,42 @@ export function ChallengesProvider({children}: ChallengesProviderProps){
         const challenge = challlenges[randomChallengeIndex]
 
         setActiveChallenge(challenge)
+
+        new Audio('/notification.mp3').play();
+        /*neverstoplearning*/
+
+        if(Notification.permission === 'granted'){
+            new Notification('Novo desafio ;)', {
+                body: `Valendo ${challenge.amount}xp`
+            })
+        }
     }
 
     function resetChallenge(){
         setActiveChallenge(null)
     }
 
+    function completedChallenge(){
+        if(!activeChallenge){
+            return;
+        }
+
+        const { amount } = activeChallenge;
+        let finalExperience = currentExperience + amount;
+
+        if(finalExperience >= experienceToNextLevel){
+            finalExperience = finalExperience - experienceToNextLevel;
+            levelUp();
+        }
+
+        setCurrentExperience(finalExperience);
+        setActiveChallenge(null);
+        setChallengesCompleted(challengesCompleted + 1);
+        
+    }
+
     return(
-        <ChallengesContext.Provider value={{ level, currentExperience, challengesCompleted, levelUp,startNewChallenge, activeChallenge, resetChallenge, experienceToNextLevel }}>
+        <ChallengesContext.Provider value={{ level, currentExperience, challengesCompleted, levelUp,startNewChallenge, activeChallenge, resetChallenge, experienceToNextLevel, completedChallenge }}>
             {children}
         </ChallengesContext.Provider>
     );
