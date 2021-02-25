@@ -12,9 +12,6 @@
     background: var(--gray-line);
     margin: 0 1.5rem;
     position: relative;
-
-    display: flex;
-    flex-direction: column;
 }
 
 .experienceBar > div > div{
